@@ -7,7 +7,11 @@ import { MapView } from './components/MapView'
 import { CaravanPanel } from './components/CaravanPanel'
 
 export function App() {
-  const [board, setBoard] = useState<string | null>(() => sessionStorage.getItem('cn:board'))
+  // Zugang bleibt dauerhaft gespeichert (localStorage), damit man den Code
+  // nicht bei jedem Besuch neu eingeben muss. "Abmelden" löscht ihn wieder.
+  const [board, setBoard] = useState<string | null>(
+    () => localStorage.getItem('cn:board') ?? sessionStorage.getItem('cn:board'),
+  )
   const [author, setAuthor] = useState<string>(() => localStorage.getItem('cn:author') ?? '')
 
   const store = useMemo<Store | null>(() => (board ? createStore(board) : null), [board])
@@ -35,12 +39,14 @@ export function App() {
   }, [store])
 
   function enter(b: string, c: string) {
-    sessionStorage.setItem('cn:board', b)
-    sessionStorage.setItem('cn:code', c)
+    localStorage.setItem('cn:board', b)
+    localStorage.setItem('cn:code', c)
     setBoard(b)
   }
 
   function leave() {
+    localStorage.removeItem('cn:board')
+    localStorage.removeItem('cn:code')
     sessionStorage.removeItem('cn:board')
     sessionStorage.removeItem('cn:code')
     setBoard(null)
