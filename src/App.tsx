@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { Caravan, DetectionCandidate } from './types'
+import type { Caravan } from './types'
 import { createStore, supabaseConfigured, type Store } from './store'
-import { loadDetections } from './lib/loadDetections'
 import { CAMPGROUND } from './config'
 import { AccessGate } from './components/AccessGate'
 import { MapView } from './components/MapView'
@@ -16,8 +15,6 @@ export function App() {
   const [caravans, setCaravans] = useState<Caravan[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [addMode, setAddMode] = useState(false)
-  const [candidates, setCandidates] = useState<DetectionCandidate[]>([])
-  const [detecting, setDetecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -49,7 +46,6 @@ export function App() {
     setBoard(null)
     setCaravans([])
     setSelectedId(null)
-    setCandidates([])
   }
 
   function editAuthor() {
@@ -61,48 +57,15 @@ export function App() {
     }
   }
 
-  async function addCaravanAt(lat: number, lng: number, label?: string) {
+  async function handleMapClick(lat: number, lng: number) {
     if (!store) return
-    const name = label ?? `Wohnwagen ${caravans.length + 1}`
+    const name = `Wohnwagen ${caravans.length + 1}`
     try {
       const c = await store.addCaravan(name, lat, lng)
       setCaravans((prev) => [...prev, c])
-      return c
+      setSelectedId(c.id)
     } catch (e) {
       setError(String((e as Error).message ?? e))
-      return undefined
-    }
-  }
-
-  async function handleMapClick(lat: number, lng: number) {
-    const c = await addCaravanAt(lat, lng)
-    if (c) setSelectedId(c.id)
-  }
-
-  async function addCandidate(cand: DetectionCandidate) {
-    const c = await addCaravanAt(cand.lat, cand.lng)
-    if (c) {
-      setCandidates((prev) => prev.filter((x) => x !== cand))
-    }
-  }
-
-  async function runDetection() {
-    setDetecting(true)
-    setError(null)
-    try {
-      const { candidates: found } = await loadDetections()
-      // Bereits als Wohnwagen erfasste Positionen herausfiltern (~5 m Umkreis).
-      const fresh = found.filter((cand) => !caravans.some((c) => distanceM(c.lat, c.lng, cand.lat, cand.lng) < 5))
-      setCandidates(fresh)
-      if (found.length === 0) {
-        setError('Die Erkennung hat keine Wohnwagen gefunden.')
-      } else if (fresh.length === 0) {
-        setError('Alle erkannten Wohnwagen sind bereits erfasst.')
-      }
-    } catch (e) {
-      setError(String((e as Error).message ?? e))
-    } finally {
-      setDetecting(false)
     }
   }
 
@@ -122,29 +85,15 @@ export function App() {
         </button>
         <button
           className={`primary ${addMode ? 'active' : ''}`}
-          onClick={() => {
-            setAddMode((v) => !v)
-            setCandidates([])
-          }}
+          onClick={() => setAddMode((v) => !v)}
         >
           {addMode ? '✓ Tippen' : '＋ Wohnwagen'}
-        </button>
-        <button onClick={runDetection} disabled={detecting} title="Erkannte Wohnwagen aus dem Luftbild vorschlagen">
-          {detecting ? <span className="spinner" /> : '🔍 Vorschläge'}
         </button>
         <button onClick={leave} title="Platz wechseln">Abmelden</button>
       </div>
 
       <div className="map-wrap">
         {addMode && <div className="hint">Auf die Karte tippen, um einen Wohnwagen zu setzen</div>}
-        {!addMode && candidates.length > 0 && (
-          <div className="hint">
-            {candidates.length} Vorschläge (gelb gestrichelt) – zum Übernehmen antippen ·{' '}
-            <span style={{ textDecoration: 'underline', pointerEvents: 'auto', cursor: 'pointer' }} onClick={() => setCandidates([])}>
-              verwerfen
-            </span>
-          </div>
-        )}
         {error && (
           <div className="hint" style={{ background: 'rgba(192,57,43,0.9)', pointerEvents: 'auto' }} onClick={() => setError(null)}>
             {error} ✕
@@ -154,12 +103,10 @@ export function App() {
 
         <MapView
           caravans={caravans}
-          candidates={candidates}
           selectedId={selectedId}
           addMode={addMode}
           onMapClick={handleMapClick}
           onSelect={setSelectedId}
-          onAddCandidate={addCandidate}
         />
 
         {selected && (
@@ -179,14 +126,4 @@ export function App() {
       </div>
     </div>
   )
-}
-
-function distanceM(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371000
-  const dLat = ((lat2 - lat1) * Math.PI) / 180
-  const dLng = ((lng2 - lng1) * Math.PI) / 180
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
-  return 2 * R * Math.asin(Math.sqrt(a))
 }

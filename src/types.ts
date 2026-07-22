@@ -34,12 +34,3 @@ export interface CaravanDetail extends Caravan {
   comments: Comment[]
   persons: Person[]
 }
-
-/** Kandidat aus der assistierten Erkennung (noch nicht gespeichert). */
-export interface DetectionCandidate {
-  lat: number
-  lng: number
-  /** grobe Kantenlänge in Metern, nur zur Info */
-  lengthM: number
-  widthM: number
-}

@@ -2,17 +2,14 @@
 
 Geteilte Notizen zu Wohnwagen auf einem Campingplatz – auf einer Karte.
 
-- **Wohnwagen auf der Karte** platzieren (OpenStreetMap oder Luftbild).
+- **Wohnwagen auf der Karte** platzieren – per Tap (Button «＋ Wohnwagen»).
 - Pro Wohnwagen **Kommentare** erfassen, jeweils als **Fakt** oder **Vermutung**.
-- Pro Wohnwagen **Personen** erfassen (Name, Alter, Kommentar).
+- Pro Wohnwagen **Personen** erfassen (Name, Jahrgang, Kommentar).
 - **Geteilt** über einen gemeinsamen Zugangscode – alle mit demselben Code
   sehen und bearbeiten dieselben Notizen.
-- **Assistierte Erkennung** (in der GitHub Action): sucht im Luftbild des
-  Platzes wohnwagenähnliche Formen und schlägt sie in der App vor
-  (Bestätigung nötig).
 
 Aktuell fest auf **Camping Ruderbaum, Altnau (TG)** konfiguriert
-(siehe `src/config.ts`). Die Karte startet direkt dort.
+(siehe `src/config.ts`). Die Karte startet direkt dort, standardmässig im Luftbild.
 
 ## Technik
 
@@ -20,8 +17,6 @@ Aktuell fest auf **Camping Ruderbaum, Altnau (TG)** konfiguriert
 - Karte mit **Leaflet** (OpenStreetMap + Esri-Luftbild).
 - Geteilte Daten über **Supabase** (kostenloses Postgres). Ohne Supabase läuft
   die App im **lokalen Modus** (Daten nur auf diesem Gerät).
-- Erkennung mit **Python + OpenCV** in der GitHub Action
-  (`scripts/detect_caravans.py`), Ergebnis als JSON im Deploy.
 
 ## Lokal starten
 
@@ -71,23 +66,11 @@ Das ist bewusst einfach gehalten (ein Freundeskreis auf dem Campingplatz), aber
 Zugriff auf diesen Platz. Für sensiblere Szenarien wären echte Logins und
 strengere RLS-Policies nötig.
 
-## Zur automatischen Erkennung – ehrliche Einordnung
+## Wohnwagen erfassen
 
-Eine perfekte, vollautomatische Wohnwagen-Erkennung aus Kartendaten ist **nicht**
-umgesetzt und wäre mit vertretbarem Aufwand auch nicht zuverlässig möglich:
-OpenStreetMap kennt keine einzelnen Wohnwagen, und echte Objekterkennung auf
-Luftbildern bräuchte ein trainiertes ML-Modell.
-
-Umgesetzt ist eine **assistierte** Variante, die in der **GitHub Action** läuft
-(nicht im Browser – dort scheiterte es an CORS/CDN):
-[`scripts/detect_caravans.py`](scripts/detect_caravans.py) lädt beim Deploy ein
-hochauflösendes Luftbild des Platzes und sucht mit OpenCV (helle Dächer +
-Kanten, gefiltert nach Grösse/Seitenverhältnis) nach wohnwagenförmigen
-Rechtecken. Das Ergebnis wird als `public/detections/ruderbaum.json` in den
-Deploy gelegt; in der App holt man die **Vorschläge** über den Button
-«🔍 Vorschläge» und übernimmt sie per Tap.
-
-Das ist bewusst heuristisch: Es findet Treffer **und** Fehltreffer. Den Bereich
-des Platzes und die Filter kann man in `scripts/detect_caravans.py` (bbox) und
-[`src/config.ts`](src/config.ts) anpassen. Neu erkennen lassen = Deploy-Workflow
-erneut ausführen.
+Wohnwagen werden **manuell** gesetzt: Button «＋ Wohnwagen», dann auf die Karte
+tippen. Zu jedem Wohnwagen lassen sich Kommentare (Fakt/Vermutung) und Personen
+erfassen. Eine automatische Erkennung aus dem Luftbild wurde erprobt, aber
+wieder entfernt – klassische Bildverarbeitung war zu unzuverlässig (0 oder
+hunderte Fehltreffer), und für einen einzelnen Platz ist manuelles Setzen
+schneller und zuverlässiger.

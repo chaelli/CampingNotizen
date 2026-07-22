@@ -1,6 +1,6 @@
 import L from 'leaflet'
 import { MapContainer, TileLayer, LayersControl, Marker, useMapEvents } from 'react-leaflet'
-import type { Caravan, DetectionCandidate } from '../types'
+import type { Caravan } from '../types'
 import { CAMPGROUND } from '../config'
 
 const caravanIcon = L.divIcon({
@@ -15,21 +15,13 @@ const caravanIconSel = L.divIcon({
   iconSize: [22, 16],
   iconAnchor: [11, 8],
 })
-const candidateIcon = L.divIcon({
-  className: '',
-  html: '<div class="marker-candidate"></div>',
-  iconSize: [20, 14],
-  iconAnchor: [10, 7],
-})
 
 interface Props {
   caravans: Caravan[]
-  candidates: DetectionCandidate[]
   selectedId: string | null
   addMode: boolean
   onMapClick: (lat: number, lng: number) => void
   onSelect: (id: string) => void
-  onAddCandidate: (c: DetectionCandidate) => void
 }
 
 function ClickHandler({ addMode, onMapClick }: { addMode: boolean; onMapClick: (lat: number, lng: number) => void }) {
@@ -41,15 +33,7 @@ function ClickHandler({ addMode, onMapClick }: { addMode: boolean; onMapClick: (
   return null
 }
 
-export function MapView({
-  caravans,
-  candidates,
-  selectedId,
-  addMode,
-  onMapClick,
-  onSelect,
-  onAddCandidate,
-}: Props) {
+export function MapView({ caravans, selectedId, addMode, onMapClick, onSelect }: Props) {
   return (
     <MapContainer
       center={CAMPGROUND.center}
@@ -84,16 +68,6 @@ export function MapView({
           icon={c.id === selectedId ? caravanIconSel : caravanIcon}
           eventHandlers={{ click: () => onSelect(c.id) }}
           title={c.label}
-        />
-      ))}
-
-      {candidates.map((c, i) => (
-        <Marker
-          key={`cand-${i}`}
-          position={[c.lat, c.lng]}
-          icon={candidateIcon}
-          eventHandlers={{ click: () => onAddCandidate(c) }}
-          title={`Vorschlag ~${c.lengthM}×${c.widthM} m – tippen zum Übernehmen`}
         />
       ))}
     </MapContainer>

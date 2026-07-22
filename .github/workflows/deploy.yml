@@ -23,16 +23,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
       - run: npm ci
-      - name: Wohnwagen-Erkennung (Luftbild + OpenCV)
-        # Best effort: bricht den Deploy nicht ab, wenn die Erkennung scheitert.
-        continue-on-error: true
-        run: |
-          python -m pip install --quiet opencv-python-headless numpy requests
-          python scripts/detect_caravans.py
       - name: Build
         env:
           # Basis-Pfad = Repo-Name, damit Assets auf GitHub Pages gefunden werden.
