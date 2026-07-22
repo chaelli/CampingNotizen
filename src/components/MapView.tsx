@@ -1,7 +1,7 @@
-import { useEffect, useMemo } from 'react'
 import L from 'leaflet'
-import { MapContainer, TileLayer, LayersControl, Marker, useMap, useMapEvents } from 'react-leaflet'
+import { MapContainer, TileLayer, LayersControl, Marker, useMapEvents } from 'react-leaflet'
 import type { Caravan, DetectionCandidate } from '../types'
+import { CAMPGROUND } from '../config'
 
 const caravanIcon = L.divIcon({
   className: '',
@@ -30,7 +30,6 @@ interface Props {
   onMapClick: (lat: number, lng: number) => void
   onSelect: (id: string) => void
   onAddCandidate: (c: DetectionCandidate) => void
-  onBoundsRef: (getter: () => L.LatLngBounds) => void
 }
 
 function ClickHandler({ addMode, onMapClick }: { addMode: boolean; onMapClick: (lat: number, lng: number) => void }) {
@@ -42,29 +41,6 @@ function ClickHandler({ addMode, onMapClick }: { addMode: boolean; onMapClick: (
   return null
 }
 
-/** Stellt den aktuellen Kartenausschnitt der Elternkomponente bereit (für die Erkennung). */
-function BoundsBridge({ onBoundsRef }: { onBoundsRef: (getter: () => L.LatLngBounds) => void }) {
-  const map = useMap()
-  useEffect(() => {
-    onBoundsRef(() => map.getBounds())
-  }, [map, onBoundsRef])
-  return null
-}
-
-/** Zentriert die Karte beim ersten Laden auf vorhandene Wohnwagen. */
-function FitOnce({ caravans }: { caravans: Caravan[] }) {
-  const map = useMap()
-  useEffect(() => {
-    if (caravans.length > 0) {
-      const bounds = L.latLngBounds(caravans.map((c) => [c.lat, c.lng] as [number, number]))
-      map.fitBounds(bounds.pad(0.3), { maxZoom: 18 })
-    }
-    // Nur einmal beim Mount.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-  return null
-}
-
 export function MapView({
   caravans,
   candidates,
@@ -73,22 +49,16 @@ export function MapView({
   onMapClick,
   onSelect,
   onAddCandidate,
-  onBoundsRef,
 }: Props) {
-  const initialCenter = useMemo<[number, number]>(() => {
-    if (caravans.length > 0) return [caravans[0].lat, caravans[0].lng]
-    return [46.8182, 8.2275] // Schweiz als Fallback
-  }, [caravans])
-
   return (
     <MapContainer
-      center={initialCenter}
-      zoom={caravans.length > 0 ? 18 : 8}
+      center={CAMPGROUND.center}
+      zoom={CAMPGROUND.zoom}
       maxZoom={21}
       style={{ cursor: addMode ? 'crosshair' : '' }}
     >
       <LayersControl position="topright">
-        <LayersControl.BaseLayer name="Luftbild">
+        <LayersControl.BaseLayer checked name="Luftbild">
           <TileLayer
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
             attribution="Tiles © Esri – Source: Esri, Maxar, Earthstar Geographics"
@@ -96,7 +66,7 @@ export function MapView({
             maxZoom={21}
           />
         </LayersControl.BaseLayer>
-        <LayersControl.BaseLayer checked name="Karte (OpenStreetMap)">
+        <LayersControl.BaseLayer name="Karte (OpenStreetMap)">
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution="© OpenStreetMap-Mitwirkende"
@@ -106,8 +76,6 @@ export function MapView({
       </LayersControl>
 
       <ClickHandler addMode={addMode} onMapClick={onMapClick} />
-      <BoundsBridge onBoundsRef={onBoundsRef} />
-      <FitOnce caravans={caravans} />
 
       {caravans.map((c) => (
         <Marker

@@ -7,8 +7,12 @@ Geteilte Notizen zu Wohnwagen auf einem Campingplatz – auf einer Karte.
 - Pro Wohnwagen **Personen** erfassen (Name, Alter, Kommentar).
 - **Geteilt** über einen gemeinsamen Zugangscode – alle mit demselben Code
   sehen und bearbeiten dieselben Notizen.
-- **Assistierte Erkennung**: schlägt im aktuellen Kartenausschnitt
-  wohnwagenähnliche Formen aus dem Luftbild vor (Bestätigung nötig).
+- **Assistierte Erkennung** (in der GitHub Action): sucht im Luftbild des
+  Platzes wohnwagenähnliche Formen und schlägt sie in der App vor
+  (Bestätigung nötig).
+
+Aktuell fest auf **Camping Ruderbaum, Altnau (TG)** konfiguriert
+(siehe `src/config.ts`). Die Karte startet direkt dort.
 
 ## Technik
 
@@ -16,7 +20,8 @@ Geteilte Notizen zu Wohnwagen auf einem Campingplatz – auf einer Karte.
 - Karte mit **Leaflet** (OpenStreetMap + Esri-Luftbild).
 - Geteilte Daten über **Supabase** (kostenloses Postgres). Ohne Supabase läuft
   die App im **lokalen Modus** (Daten nur auf diesem Gerät).
-- Erkennung mit **OpenCV.js** (bei Bedarf vom CDN geladen).
+- Erkennung mit **Python + OpenCV** in der GitHub Action
+  (`scripts/detect_caravans.py`), Ergebnis als JSON im Deploy.
 
 ## Lokal starten
 
@@ -73,8 +78,16 @@ umgesetzt und wäre mit vertretbarem Aufwand auch nicht zuverlässig möglich:
 OpenStreetMap kennt keine einzelnen Wohnwagen, und echte Objekterkennung auf
 Luftbildern bräuchte ein trainiertes ML-Modell.
 
-Umgesetzt ist eine **assistierte** Variante: Für den aktuellen Ausschnitt wird
-ein Luftbild geholt und mit klassischer Bildverarbeitung nach rechteckigen,
-wohnwagengrossen Formen durchsucht. Das Ergebnis sind **Vorschläge**, die per
-Tap übernommen werden. Am besten funktioniert es nah herangezoomt bei gut
-sichtbaren, einzeln stehenden Wagen.
+Umgesetzt ist eine **assistierte** Variante, die in der **GitHub Action** läuft
+(nicht im Browser – dort scheiterte es an CORS/CDN):
+[`scripts/detect_caravans.py`](scripts/detect_caravans.py) lädt beim Deploy ein
+hochauflösendes Luftbild des Platzes und sucht mit OpenCV (helle Dächer +
+Kanten, gefiltert nach Grösse/Seitenverhältnis) nach wohnwagenförmigen
+Rechtecken. Das Ergebnis wird als `public/detections/ruderbaum.json` in den
+Deploy gelegt; in der App holt man die **Vorschläge** über den Button
+«🔍 Vorschläge» und übernimmt sie per Tap.
+
+Das ist bewusst heuristisch: Es findet Treffer **und** Fehltreffer. Den Bereich
+des Platzes und die Filter kann man in `scripts/detect_caravans.py` (bbox) und
+[`src/config.ts`](src/config.ts) anpassen. Neu erkennen lassen = Deploy-Workflow
+erneut ausführen.

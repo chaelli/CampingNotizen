@@ -1,6 +1,9 @@
 node_modules
 dist
 dist-ssr
+
+# Von der GitHub Action erzeugte Erkennungsdaten (nicht committen)
+public/detections/
 *.local
 .env
 .env.*

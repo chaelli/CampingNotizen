@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type L from 'leaflet'
+import { useEffect, useMemo, useState } from 'react'
 import type { Caravan, DetectionCandidate } from './types'
 import { createStore, supabaseConfigured, type Store } from './store'
-import { detectCaravans } from './lib/detect'
+import { loadDetections } from './lib/loadDetections'
+import { CAMPGROUND } from './config'
 import { AccessGate } from './components/AccessGate'
 import { MapView } from './components/MapView'
 import { CaravanPanel } from './components/CaravanPanel'
@@ -20,13 +20,6 @@ export function App() {
   const [detecting, setDetecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-
-  const boundsGetter = useRef<() => L.LatLngBounds>(() => {
-    throw new Error('Karte nicht bereit')
-  })
-  const setBoundsGetter = useCallback((getter: () => L.LatLngBounds) => {
-    boundsGetter.current = getter
-  }, [])
 
   // Wohnwagen laden, sobald ein Store existiert.
   useEffect(() => {
@@ -97,19 +90,17 @@ export function App() {
     setDetecting(true)
     setError(null)
     try {
-      const b = boundsGetter.current()
-      const found = await detectCaravans({
-        minLat: b.getSouth(),
-        minLng: b.getWest(),
-        maxLat: b.getNorth(),
-        maxLng: b.getEast(),
-      })
-      setCandidates(found)
+      const { candidates: found } = await loadDetections()
+      // Bereits als Wohnwagen erfasste Positionen herausfiltern (~5 m Umkreis).
+      const fresh = found.filter((cand) => !caravans.some((c) => distanceM(c.lat, c.lng, cand.lat, cand.lng) < 5))
+      setCandidates(fresh)
       if (found.length === 0) {
-        setError('Keine wohnwagenähnlichen Formen gefunden. Näher heranzoomen und erneut versuchen.')
+        setError('Die Erkennung hat keine Wohnwagen gefunden.')
+      } else if (fresh.length === 0) {
+        setError('Alle erkannten Wohnwagen sind bereits erfasst.')
       }
     } catch (e) {
-      setError('Erkennung fehlgeschlagen: ' + String((e as Error).message ?? e))
+      setError(String((e as Error).message ?? e))
     } finally {
       setDetecting(false)
     }
@@ -124,7 +115,7 @@ export function App() {
   return (
     <div className="app">
       <div className="topbar">
-        <h1>⛺ CampingNotizen</h1>
+        <h1>⛺ {CAMPGROUND.name}</h1>
         <span className="badge">{supabaseConfigured() ? '🔗 geteilt' : '📱 lokal'}</span>
         <button onClick={editAuthor} title="Name setzen">
           👤 {author || 'Name'}
@@ -138,8 +129,8 @@ export function App() {
         >
           {addMode ? '✓ Tippen' : '＋ Wohnwagen'}
         </button>
-        <button onClick={runDetection} disabled={detecting} title="Wohnwagen im Ausschnitt vorschlagen">
-          {detecting ? <span className="spinner" /> : '🔍 Erkennen'}
+        <button onClick={runDetection} disabled={detecting} title="Erkannte Wohnwagen aus dem Luftbild vorschlagen">
+          {detecting ? <span className="spinner" /> : '🔍 Vorschläge'}
         </button>
         <button onClick={leave} title="Platz wechseln">Abmelden</button>
       </div>
@@ -169,7 +160,6 @@ export function App() {
           onMapClick={handleMapClick}
           onSelect={setSelectedId}
           onAddCandidate={addCandidate}
-          onBoundsRef={setBoundsGetter}
         />
 
         {selected && (
@@ -189,4 +179,14 @@ export function App() {
       </div>
     </div>
   )
+}
+
+function distanceM(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLng = ((lng2 - lng1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(a))
 }
