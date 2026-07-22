@@ -62,6 +62,10 @@ export function CaravanPanel({ store, caravan, author, onClose, onRenamed, onDel
     const p = await wrap(store.addPerson(caravan.id, name, birthYear, comment))
     if (p) setPersons((prev) => [...prev, p])
   }
+  async function editPerson(id: string, name: string, birthYear: number | null, comment: string) {
+    await wrap(store.updatePerson(id, name, birthYear, comment))
+    setPersons((prev) => prev.map((p) => (p.id === id ? { ...p, name, birthYear, comment } : p)))
+  }
   async function delPerson(id: string) {
     await wrap(store.deletePerson(id))
     setPersons((prev) => prev.filter((p) => p.id !== id))
@@ -116,14 +120,7 @@ export function CaravanPanel({ store, caravan, author, onClose, onRenamed, onDel
             <PersonForm onAdd={addPerson} />
             {persons.length === 0 && <p className="empty">Noch keine Personen erfasst.</p>}
             {persons.map((p) => (
-              <div className="item" key={p.id}>
-                <button className="del" onClick={() => delPerson(p.id)} aria-label="Löschen">🗑</button>
-                <div>
-                  <span className="person-name">{p.name}</span>
-                  {p.birthYear != null && <span className="meta"> · Jg. {p.birthYear}</span>}
-                </div>
-                {p.comment && <p>{p.comment}</p>}
-              </div>
+              <PersonItem key={p.id} person={p} onSave={editPerson} onDelete={delPerson} />
             ))}
 
             <h3>Wohnwagen</h3>
@@ -199,6 +196,75 @@ function PersonForm({ onAdd }: { onAdd: (name: string, birthYear: number | null,
         Person hinzufügen
       </button>
     </form>
+  )
+}
+
+function PersonItem({
+  person,
+  onSave,
+  onDelete,
+}: {
+  person: Person
+  onSave: (id: string, name: string, birthYear: number | null, comment: string) => void
+  onDelete: (id: string) => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [name, setName] = useState(person.name)
+  const [birthYear, setBirthYear] = useState(person.birthYear != null ? String(person.birthYear) : '')
+  const [comment, setComment] = useState(person.comment)
+
+  function save() {
+    const n = name.trim()
+    if (!n) return
+    const parsed = birthYear.trim() === '' ? null : Number(birthYear)
+    const year = parsed != null && Number.isInteger(parsed) && parsed >= 1900 && parsed <= 2100 ? parsed : null
+    onSave(person.id, n, year, comment.trim())
+    setEditing(false)
+  }
+
+  function cancel() {
+    setName(person.name)
+    setBirthYear(person.birthYear != null ? String(person.birthYear) : '')
+    setComment(person.comment)
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <div className="item">
+        <div className="form">
+          <div className="row">
+            <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+            <input
+              style={{ maxWidth: 110 }}
+              type="number"
+              min={1900}
+              max={2100}
+              placeholder="Jahrgang"
+              value={birthYear}
+              onChange={(e) => setBirthYear(e.target.value)}
+            />
+          </div>
+          <textarea rows={2} placeholder="Kommentar zur Person…" value={comment} onChange={(e) => setComment(e.target.value)} />
+          <div className="row">
+            <button className="primary" onClick={save} disabled={!name.trim()}>Speichern</button>
+            <button onClick={cancel}>Abbrechen</button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="item">
+      <button className="del" onClick={() => setEditing(true)} aria-label="Bearbeiten" style={{ right: 34 }}>✏️</button>
+      <button className="del" onClick={() => onDelete(person.id)} aria-label="Löschen">🗑</button>
+      <div>
+        <span className="person-name">{person.name}</span>
+        {person.birthYear != null && <span className="meta"> · Jg. {person.birthYear}</span>}
+      </div>
+      {person.comment && <p>{person.comment}</p>}
+    </div>
   )
 }
 

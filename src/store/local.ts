@@ -118,6 +118,17 @@ export class LocalStore implements Store {
     return person
   }
 
+  async updatePerson(id: string, name: string, birthYear: number | null, comment: string): Promise<void> {
+    const db = load()
+    const p = db.persons.find((x) => x.id === id)
+    if (p) {
+      p.name = name
+      p.birthYear = birthYear
+      p.comment = comment
+      save(db)
+    }
+  }
+
   async deletePerson(id: string): Promise<void> {
     const db = load()
     db.persons = db.persons.filter((p) => p.id !== id)

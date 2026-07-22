@@ -1,9 +1,11 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Caravan, Comment, CommentType, Person } from '../types'
+import { SUPABASE } from '../supabaseConfig'
 import type { Store } from './index'
 
-const url = import.meta.env.VITE_SUPABASE_URL
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+// Env-Variablen haben Vorrang, sonst die committete Config (supabaseConfig.ts).
+const url = import.meta.env.VITE_SUPABASE_URL || SUPABASE.url
+const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || SUPABASE.anonKey
 
 let client: SupabaseClient | null = null
 
@@ -152,6 +154,14 @@ export class SupabaseStore implements Store {
       .single()
     if (error) fail('Person speichern fehlgeschlagen', error)
     return toPerson(data as PersonRow)
+  }
+
+  async updatePerson(id: string, name: string, birthYear: number | null, comment: string): Promise<void> {
+    const { error } = await getClient()
+      .from('persons')
+      .update({ name, birth_year: birthYear, comment })
+      .eq('id', id)
+    if (error) fail('Person aktualisieren fehlgeschlagen', error)
   }
 
   async deletePerson(id: string): Promise<void> {

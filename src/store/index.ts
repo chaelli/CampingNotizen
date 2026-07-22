@@ -21,6 +21,7 @@ export interface Store {
 
   listPersons(caravanId: string): Promise<Person[]>
   addPerson(caravanId: string, name: string, birthYear: number | null, comment: string): Promise<Person>
+  updatePerson(id: string, name: string, birthYear: number | null, comment: string): Promise<void>
   deletePerson(id: string): Promise<void>
 }
 
