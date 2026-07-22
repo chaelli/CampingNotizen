@@ -20,7 +20,7 @@ export interface Store {
   deleteComment(id: string): Promise<void>
 
   listPersons(caravanId: string): Promise<Person[]>
-  addPerson(caravanId: string, name: string, age: number | null, comment: string): Promise<Person>
+  addPerson(caravanId: string, name: string, birthYear: number | null, comment: string): Promise<Person>
   deletePerson(id: string): Promise<void>
 }
 

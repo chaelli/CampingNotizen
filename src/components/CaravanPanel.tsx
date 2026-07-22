@@ -58,8 +58,8 @@ export function CaravanPanel({ store, caravan, author, onClose, onRenamed, onDel
     await wrap(store.deleteComment(id))
     setComments((prev) => prev.filter((c) => c.id !== id))
   }
-  async function addPerson(name: string, age: number | null, comment: string) {
-    const p = await wrap(store.addPerson(caravan.id, name, age, comment))
+  async function addPerson(name: string, birthYear: number | null, comment: string) {
+    const p = await wrap(store.addPerson(caravan.id, name, birthYear, comment))
     if (p) setPersons((prev) => [...prev, p])
   }
   async function delPerson(id: string) {
@@ -120,7 +120,7 @@ export function CaravanPanel({ store, caravan, author, onClose, onRenamed, onDel
                 <button className="del" onClick={() => delPerson(p.id)} aria-label="Löschen">🗑</button>
                 <div>
                   <span className="person-name">{p.name}</span>
-                  {p.age != null && <span className="meta"> · {p.age} Jahre</span>}
+                  {p.birthYear != null && <span className="meta"> · Jg. {p.birthYear}</span>}
                 </div>
                 {p.comment && <p>{p.comment}</p>}
               </div>
@@ -165,18 +165,19 @@ function CommentForm({ onAdd }: { onAdd: (type: CommentType, text: string) => vo
   )
 }
 
-function PersonForm({ onAdd }: { onAdd: (name: string, age: number | null, comment: string) => void }) {
+function PersonForm({ onAdd }: { onAdd: (name: string, birthYear: number | null, comment: string) => void }) {
   const [name, setName] = useState('')
-  const [age, setAge] = useState('')
+  const [birthYear, setBirthYear] = useState('')
   const [comment, setComment] = useState('')
   function submit(e: React.FormEvent) {
     e.preventDefault()
     const n = name.trim()
     if (!n) return
-    const parsedAge = age.trim() === '' ? null : Number(age)
-    onAdd(n, Number.isFinite(parsedAge) ? parsedAge : null, comment.trim())
+    const parsed = birthYear.trim() === '' ? null : Number(birthYear)
+    const year = parsed != null && Number.isInteger(parsed) && parsed >= 1900 && parsed <= 2100 ? parsed : null
+    onAdd(n, year, comment.trim())
     setName('')
-    setAge('')
+    setBirthYear('')
     setComment('')
   }
   return (
@@ -184,12 +185,13 @@ function PersonForm({ onAdd }: { onAdd: (name: string, age: number | null, comme
       <div className="row">
         <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
         <input
-          style={{ maxWidth: 90 }}
+          style={{ maxWidth: 110 }}
           type="number"
-          min={0}
-          placeholder="Alter"
-          value={age}
-          onChange={(e) => setAge(e.target.value)}
+          min={1900}
+          max={2100}
+          placeholder="Jahrgang"
+          value={birthYear}
+          onChange={(e) => setBirthYear(e.target.value)}
         />
       </div>
       <textarea rows={2} placeholder="Kommentar zur Person…" value={comment} onChange={(e) => setComment(e.target.value)} />

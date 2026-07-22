@@ -39,7 +39,7 @@ interface PersonRow {
   id: string
   caravan_id: string
   name: string
-  age: number | null
+  birth_year: number | null
   comment: string
   created_at: string
 }
@@ -64,7 +64,7 @@ const toPerson = (r: PersonRow): Person => ({
   id: r.id,
   caravanId: r.caravan_id,
   name: r.name,
-  age: r.age,
+  birthYear: r.birth_year,
   comment: r.comment,
   createdAt: r.created_at,
 })
@@ -144,10 +144,10 @@ export class SupabaseStore implements Store {
     return (data as PersonRow[]).map(toPerson)
   }
 
-  async addPerson(caravanId: string, name: string, age: number | null, comment: string): Promise<Person> {
+  async addPerson(caravanId: string, name: string, birthYear: number | null, comment: string): Promise<Person> {
     const { data, error } = await getClient()
       .from('persons')
-      .insert({ caravan_id: caravanId, name, age, comment })
+      .insert({ caravan_id: caravanId, name, birth_year: birthYear, comment })
       .select()
       .single()
     if (error) fail('Person speichern fehlgeschlagen', error)

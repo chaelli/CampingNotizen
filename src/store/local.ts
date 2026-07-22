@@ -103,13 +103,13 @@ export class LocalStore implements Store {
       .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
   }
 
-  async addPerson(caravanId: string, name: string, age: number | null, comment: string): Promise<Person> {
+  async addPerson(caravanId: string, name: string, birthYear: number | null, comment: string): Promise<Person> {
     const db = load()
     const person: Person = {
       id: randomId(),
       caravanId,
       name,
-      age,
+      birthYear,
       comment,
       createdAt: new Date().toISOString(),
     }

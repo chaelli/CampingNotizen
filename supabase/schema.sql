@@ -36,10 +36,20 @@ create table if not exists public.persons (
   id uuid primary key default gen_random_uuid(),
   caravan_id uuid not null references public.caravans (id) on delete cascade,
   name text not null,
-  age int,
+  birth_year int,
   comment text not null default '',
   created_at timestamptz not null default now()
 );
+-- Falls die Tabelle noch mit der alten Spalte "age" existiert: sicher umbenennen.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'persons' and column_name = 'age'
+  ) then
+    alter table public.persons rename column age to birth_year;
+  end if;
+end $$;
 create index if not exists persons_caravan_idx on public.persons (caravan_id);
 
 -- Row Level Security ---------------------------------------------------------

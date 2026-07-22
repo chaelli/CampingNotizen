@@ -23,7 +23,8 @@ export interface Person {
   id: string
   caravanId: string
   name: string
-  age: number | null
+  /** Jahrgang (Geburtsjahr), z. B. 1985. */
+  birthYear: number | null
   comment: string
   createdAt: string
 }
