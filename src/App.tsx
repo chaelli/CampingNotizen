@@ -18,9 +18,13 @@ export function App() {
 
   const [caravans, setCaravans] = useState<Caravan[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [addMode, setAddMode] = useState(false)
+  // Ein per langem Drücken angelegter Wohnwagen ist "provisorisch": Er wird
+  // erst dann behalten, wenn Name geändert / Kommentar / Person hinzukommt.
+  // Sonst wird er beim Verlassen wieder gelöscht.
+  const [provisionalId, setProvisionalId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [hintDismissed, setHintDismissed] = useState(() => localStorage.getItem('cn:hintLongpress') === '1')
 
   // Wohnwagen laden, sobald ein Store existiert.
   useEffect(() => {
@@ -44,7 +48,26 @@ export function App() {
     setBoard(b)
   }
 
-  function leave() {
+  function dismissHint() {
+    localStorage.setItem('cn:hintLongpress', '1')
+    setHintDismissed(true)
+  }
+
+  async function discardProvisional() {
+    if (!provisionalId || !store) return
+    const id = provisionalId
+    setProvisionalId(null)
+    setCaravans((prev) => prev.filter((c) => c.id !== id))
+    if (selectedId === id) setSelectedId(null)
+    try {
+      await store.deleteCaravan(id)
+    } catch {
+      /* egal – war nur ein leerer Entwurf */
+    }
+  }
+
+  async function leave() {
+    await discardProvisional()
     localStorage.removeItem('cn:board')
     localStorage.removeItem('cn:code')
     sessionStorage.removeItem('cn:board')
@@ -63,16 +86,37 @@ export function App() {
     }
   }
 
-  async function handleMapClick(lat: number, lng: number) {
+  async function handleLongPress(lat: number, lng: number) {
     if (!store) return
+    if (!hintDismissed) dismissHint()
+    await discardProvisional()
     const name = `Wohnwagen ${caravans.length + 1}`
     try {
       const c = await store.addCaravan(name, lat, lng)
       setCaravans((prev) => [...prev, c])
+      setProvisionalId(c.id)
       setSelectedId(c.id)
     } catch (e) {
       setError(String((e as Error).message ?? e))
     }
+  }
+
+  async function selectCaravan(id: string) {
+    if (provisionalId && provisionalId !== id) await discardProvisional()
+    setSelectedId(id)
+  }
+
+  async function closePanel() {
+    if (selectedId && selectedId === provisionalId) {
+      await discardProvisional()
+    } else {
+      setSelectedId(null)
+    }
+  }
+
+  // Der provisorische Wohnwagen hat "echten" Inhalt bekommen -> behalten.
+  function commitProvisional() {
+    setProvisionalId(null)
   }
 
   if (!board || !store) {
@@ -88,17 +132,15 @@ export function App() {
         <button onClick={editAuthor} title="Name setzen">
           👤 {author || 'Name'}
         </button>
-        <button
-          className={`primary ${addMode ? 'active' : ''}`}
-          onClick={() => setAddMode((v) => !v)}
-        >
-          {addMode ? '✓ Tippen' : '＋ Wohnwagen'}
-        </button>
         <button onClick={leave} title="Platz wechseln">Abmelden</button>
       </div>
 
       <div className="map-wrap">
-        {addMode && <div className="hint">Auf die Karte tippen, um einen Wohnwagen zu setzen</div>}
+        {!hintDismissed && (
+          <div className="hint" style={{ pointerEvents: 'auto' }} onClick={dismissHint}>
+            Tipp: <b>lange auf die Karte drücken</b>, um einen Wohnwagen hinzuzufügen ✕
+          </div>
+        )}
         {error && (
           <div className="hint" style={{ background: 'rgba(192,57,43,0.9)', pointerEvents: 'auto' }} onClick={() => setError(null)}>
             {error} ✕
@@ -109,9 +151,8 @@ export function App() {
         <MapView
           caravans={caravans}
           selectedId={selectedId}
-          addMode={addMode}
-          onMapClick={handleMapClick}
-          onSelect={setSelectedId}
+          onLongPress={handleLongPress}
+          onSelect={selectCaravan}
         />
 
         {selected && (
@@ -120,9 +161,11 @@ export function App() {
             store={store}
             caravan={selected}
             author={author}
-            onClose={() => setSelectedId(null)}
+            onContentAdded={commitProvisional}
+            onClose={closePanel}
             onRenamed={(id, label) => setCaravans((prev) => prev.map((c) => (c.id === id ? { ...c, label } : c)))}
             onDeleted={(id) => {
+              if (provisionalId === id) setProvisionalId(null)
               setCaravans((prev) => prev.filter((c) => c.id !== id))
               setSelectedId(null)
             }}

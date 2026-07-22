@@ -2,7 +2,9 @@
 
 Geteilte Notizen zu Wohnwagen auf einem Campingplatz – auf einer Karte.
 
-- **Wohnwagen auf der Karte** platzieren – per Tap (Button «＋ Wohnwagen»).
+- **Wohnwagen auf der Karte** platzieren – lange auf die Karte drücken. Ein so
+  angelegter Wohnwagen wird nur behalten, wenn Name geändert, Kommentar oder
+  Person hinzugefügt wurde.
 - Pro Wohnwagen **Kommentare** erfassen, jeweils als **Fakt** oder **Vermutung**.
 - Pro Wohnwagen **Personen** erfassen (Name, Jahrgang, Kommentar).
 - **Geteilt** über einen gemeinsamen Zugangscode – alle mit demselben Code
@@ -68,9 +70,8 @@ strengere RLS-Policies nötig.
 
 ## Wohnwagen erfassen
 
-Wohnwagen werden **manuell** gesetzt: Button «＋ Wohnwagen», dann auf die Karte
-tippen. Zu jedem Wohnwagen lassen sich Kommentare (Fakt/Vermutung) und Personen
-erfassen. Eine automatische Erkennung aus dem Luftbild wurde erprobt, aber
+Wohnwagen werden **manuell** gesetzt: lange auf die Karte drücken. Zu jedem
+Wohnwagen lassen sich Kommentare (Fakt/Vermutung) und Personen erfassen. Eine automatische Erkennung aus dem Luftbild wurde erprobt, aber
 wieder entfernt – klassische Bildverarbeitung war zu unzuverlässig (0 oder
 hunderte Fehltreffer), und für einen einzelnen Platz ist manuelles Setzen
 schneller und zuverlässiger.

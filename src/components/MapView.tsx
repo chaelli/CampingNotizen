@@ -19,37 +19,30 @@ const caravanIconSel = L.divIcon({
 interface Props {
   caravans: Caravan[]
   selectedId: string | null
-  addMode: boolean
-  onMapClick: (lat: number, lng: number) => void
+  onLongPress: (lat: number, lng: number) => void
   onSelect: (id: string) => void
 }
 
-function ClickHandler({ addMode, onMapClick }: { addMode: boolean; onMapClick: (lat: number, lng: number) => void }) {
+// Langes Drücken (Touch) bzw. Rechtsklick löst in Leaflet "contextmenu" aus.
+function LongPressHandler({ onLongPress }: { onLongPress: (lat: number, lng: number) => void }) {
   useMapEvents({
-    click(e) {
-      if (addMode) onMapClick(e.latlng.lat, e.latlng.lng)
+    contextmenu(e) {
+      onLongPress(e.latlng.lat, e.latlng.lng)
     },
   })
   return null
 }
 
-export function MapView({ caravans, selectedId, addMode, onMapClick, onSelect }: Props) {
+export function MapView({ caravans, selectedId, onLongPress, onSelect }: Props) {
   return (
-    <MapContainer
-      center={CAMPGROUND.center}
-      zoom={CAMPGROUND.zoom}
-      maxZoom={21}
-      zoomControl={false}
-      attributionControl={false}
-      style={{ cursor: addMode ? 'crosshair' : '' }}
-    >
+    <MapContainer center={CAMPGROUND.center} zoom={CAMPGROUND.zoom} maxZoom={21} zoomControl={false} attributionControl={false}>
       <TileLayer
         url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
         maxNativeZoom={19}
         maxZoom={21}
       />
 
-      <ClickHandler addMode={addMode} onMapClick={onMapClick} />
+      <LongPressHandler onLongPress={onLongPress} />
 
       {caravans.map((c) => (
         <Marker

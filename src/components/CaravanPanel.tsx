@@ -6,12 +6,16 @@ interface Props {
   store: Store
   caravan: Caravan
   author: string
+  /** Wird ausgelöst, sobald der Wohnwagen echten Inhalt bekommt
+   * (Name geändert, Kommentar oder Person) – damit ein provisorischer
+   * Wohnwagen behalten statt verworfen wird. */
+  onContentAdded: () => void
   onClose: () => void
   onRenamed: (id: string, label: string) => void
   onDeleted: (id: string) => void
 }
 
-export function CaravanPanel({ store, caravan, author, onClose, onRenamed, onDeleted }: Props) {
+export function CaravanPanel({ store, caravan, author, onContentAdded, onClose, onRenamed, onDeleted }: Props) {
   const [comments, setComments] = useState<Comment[]>([])
   const [persons, setPersons] = useState<Person[]>([])
   const [loading, setLoading] = useState(true)
@@ -47,12 +51,16 @@ export function CaravanPanel({ store, caravan, author, onClose, onRenamed, onDel
     const trimmed = label.trim() || caravan.label
     await wrap(store.updateCaravanLabel(caravan.id, trimmed))
     onRenamed(caravan.id, trimmed)
+    if (trimmed !== caravan.label) onContentAdded()
     setEditingLabel(false)
   }
 
   async function addComment(type: CommentType, text: string) {
     const c = await wrap(store.addComment(caravan.id, type, text, author))
-    if (c) setComments((prev) => [...prev, c])
+    if (c) {
+      setComments((prev) => [...prev, c])
+      onContentAdded()
+    }
   }
   async function delComment(id: string) {
     await wrap(store.deleteComment(id))
@@ -60,7 +68,10 @@ export function CaravanPanel({ store, caravan, author, onClose, onRenamed, onDel
   }
   async function addPerson(name: string, birthYear: number | null, comment: string) {
     const p = await wrap(store.addPerson(caravan.id, name, birthYear, comment))
-    if (p) setPersons((prev) => [...prev, p])
+    if (p) {
+      setPersons((prev) => [...prev, p])
+      onContentAdded()
+    }
   }
   async function editPerson(id: string, name: string, birthYear: number | null, comment: string) {
     await wrap(store.updatePerson(id, name, birthYear, comment))
