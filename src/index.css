@@ -1,0 +1,361 @@
+:root {
+  --green: #2f6b3d;
+  --green-dark: #234f2e;
+  --fakt: #1f6feb;
+  --vermutung: #b8860b;
+  --bg: #f5f5f2;
+  --panel: #ffffff;
+  --text: #1c1c1c;
+  --muted: #666;
+  --border: #e2e2dd;
+  --danger: #c0392b;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  color: var(--text);
+  background: var(--bg);
+  overscroll-behavior: none;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+button.primary {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green-dark);
+}
+
+button.primary.active {
+  background: var(--green-dark);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+input,
+textarea,
+select {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 100%;
+  background: #fff;
+  color: var(--text);
+}
+
+/* ---------- App-Layout ---------- */
+.app {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--green);
+  color: #fff;
+  z-index: 500;
+}
+.topbar h1 {
+  font-size: 17px;
+  margin: 0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar .badge {
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+.topbar button {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+  padding: 6px 10px;
+}
+.topbar button.primary {
+  background: #fff;
+  color: var(--green-dark);
+  border-color: #fff;
+  font-weight: 600;
+}
+.topbar button.primary.active {
+  background: #ffe08a;
+}
+
+.map-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+}
+
+.hint {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  z-index: 450;
+  pointer-events: none;
+  max-width: 90%;
+  text-align: center;
+}
+
+/* ---------- Marker ---------- */
+.marker-caravan {
+  background: var(--green);
+  border: 2px solid #fff;
+  border-radius: 6px 6px 6px 2px;
+  width: 22px;
+  height: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.marker-candidate {
+  background: rgba(255, 224, 138, 0.85);
+  border: 2px dashed var(--vermutung);
+  border-radius: 4px;
+  width: 20px;
+  height: 14px;
+}
+
+/* ---------- Panel (Bottom-Sheet / Sidebar) ---------- */
+.panel {
+  position: absolute;
+  background: var(--panel);
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.2);
+}
+@media (max-width: 719px) {
+  .panel {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 70%;
+    border-radius: 16px 16px 0 0;
+  }
+}
+@media (min-width: 720px) {
+  .panel {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 380px;
+    box-shadow: -2px 0 16px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.panel-head h2 {
+  margin: 0;
+  font-size: 16px;
+  flex: 1;
+}
+.panel-body {
+  padding: 14px;
+  overflow-y: auto;
+  flex: 1;
+}
+.panel-body h3 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  margin: 18px 0 8px;
+}
+.panel-body h3:first-child {
+  margin-top: 0;
+}
+
+.close-x {
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  padding: 4px 8px;
+}
+
+/* ---------- Listen ---------- */
+.item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  position: relative;
+}
+.item .del {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  padding: 2px 6px;
+}
+.tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.tag.fakt {
+  background: var(--fakt);
+}
+.tag.vermutung {
+  background: var(--vermutung);
+}
+.item .meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.item p {
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+}
+.person-name {
+  font-weight: 600;
+}
+
+/* ---------- Formulare ---------- */
+.form {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.form .row {
+  display: flex;
+  gap: 8px;
+}
+.type-toggle {
+  display: flex;
+  gap: 8px;
+}
+.type-toggle button {
+  flex: 1;
+}
+.type-toggle button.sel.fakt {
+  background: var(--fakt);
+  color: #fff;
+  border-color: var(--fakt);
+}
+.type-toggle button.sel.vermutung {
+  background: var(--vermutung);
+  color: #fff;
+  border-color: var(--vermutung);
+}
+.empty {
+  color: var(--muted);
+  font-size: 14px;
+}
+.error {
+  background: #fdecea;
+  color: var(--danger);
+  border: 1px solid #f5c6c0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+/* ---------- Access-Gate ---------- */
+.gate {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--green);
+  padding: 20px;
+}
+.gate-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px 24px;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+.gate-card h1 {
+  margin: 0 0 4px;
+  font-size: 24px;
+  color: var(--green-dark);
+}
+.gate-card p {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0 0 18px;
+}
+.gate-card .form {
+  gap: 12px;
+}
+.gate-card .mode {
+  font-size: 12px;
+  margin-top: 14px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

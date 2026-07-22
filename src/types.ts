@@ -1,0 +1,44 @@
+export type CommentType = 'fakt' | 'vermutung'
+
+export interface Caravan {
+  id: string
+  /** SHA-256-Hash des Zugangscodes – trennt die geteilten "Plätze". */
+  board: string
+  label: string
+  lat: number
+  lng: number
+  createdAt: string
+}
+
+export interface Comment {
+  id: string
+  caravanId: string
+  type: CommentType
+  text: string
+  author: string
+  createdAt: string
+}
+
+export interface Person {
+  id: string
+  caravanId: string
+  name: string
+  age: number | null
+  comment: string
+  createdAt: string
+}
+
+/** Ein Wohnwagen samt seiner Kommentare und Personen (für die Detailansicht). */
+export interface CaravanDetail extends Caravan {
+  comments: Comment[]
+  persons: Person[]
+}
+
+/** Kandidat aus der assistierten Erkennung (noch nicht gespeichert). */
+export interface DetectionCandidate {
+  lat: number
+  lng: number
+  /** grobe Kantenlänge in Metern, nur zur Info */
+  lengthM: number
+  widthM: number
+}
