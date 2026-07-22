@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Caravan } from './types'
-import { createStore, supabaseConfigured, type Store } from './store'
+import { createStore, type Store } from './store'
 import { CAMPGROUND } from './config'
 import { AccessGate } from './components/AccessGate'
 import { MapView } from './components/MapView'
@@ -78,8 +78,7 @@ export function App() {
   return (
     <div className="app">
       <div className="topbar">
-        <h1>⛺ {CAMPGROUND.name}</h1>
-        <span className="badge">{supabaseConfigured() ? '🔗 geteilt' : '📱 lokal'}</span>
+        <h1>{CAMPGROUND.name}</h1>
         <button onClick={editAuthor} title="Name setzen">
           👤 {author || 'Name'}
         </button>
