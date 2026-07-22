@@ -1,19 +1,14 @@
 /**
  * Öffentliche Supabase-Verbindung für den GETEILTEN Modus.
  *
- * Hier die zwei Werte aus dem Supabase-Dashboard eintragen
- * (Project Settings → API):
- *   url     = "Project URL"
- *   anonKey = "anon public" Key
+ * Nur der ÖFFENTLICHE anon-Key gehört hierher (Client-Key). Der geheime
+ * service_role-Key darf NIEMALS hier oder sonst im Frontend/Repo stehen.
+ * Der Zugriff wird über RLS und den geteilten Zugangscode geregelt.
  *
- * Der anon-Key ist bewusst öffentlich (Client-Key) und darf hier stehen;
- * der Zugriff wird über RLS und den geteilten Zugangscode geregelt.
- *
- * Solange beide Felder leer sind, läuft die App im lokalen Modus
- * (Daten nur auf diesem Gerät). Alternativ können die Werte auch über
- * die Env-Variablen VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY gesetzt werden.
+ * Env-Variablen (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY) haben Vorrang.
  */
 export const SUPABASE = {
-  url: '',
-  anonKey: '',
+  url: 'https://qiwljrvghsuyvdobvlxh.supabase.co',
+  anonKey:
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpd2xqcnZnaHN1eXZkb2J2bHhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MTA3MDgsImV4cCI6MjEwMDI4NjcwOH0.fee9kxPG3r6mqBEZSKlyq3quHGlnWnZgIKs2m8jUvsA',
 }
