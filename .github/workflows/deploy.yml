@@ -2,7 +2,11 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: ['main']
+    # Deploy vom Default-Branch. GitHub Pages erlaubt Deploys nur vom
+    # Default-Branch; solange dieser noch der Arbeitsbranch ist, triggern wir
+    # darauf. Wird der Default-Branch später auf "main" gestellt, hier auf
+    # ['main'] ändern.
+    branches: ['claude/campingplatz-wohnwagen-system-i5pbm8']
   workflow_dispatch:
 
 permissions:
