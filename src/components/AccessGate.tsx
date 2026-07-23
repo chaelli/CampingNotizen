@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { sha256 } from '../lib/hash'
-import { supabaseConfigured } from '../store'
 
 interface Props {
   onEnter: (board: string, code: string) => void
@@ -14,7 +13,6 @@ interface Props {
 export function AccessGate({ onEnter }: Props) {
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
-  const shared = supabaseConfigured()
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -47,11 +45,6 @@ export function AccessGate({ onEnter }: Props) {
             {busy ? 'Öffne…' : 'Platz öffnen'}
           </button>
         </form>
-        <div className="mode">
-          {shared
-            ? '🔗 Geteilter Modus (Supabase) – Notizen sind für alle mit dem Code sichtbar.'
-            : '📱 Lokaler Modus – Daten bleiben nur auf diesem Gerät. Für echtes Teilen Supabase konfigurieren (siehe README).'}
-        </div>
       </div>
     </div>
   )
