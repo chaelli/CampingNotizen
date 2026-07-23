@@ -25,6 +25,8 @@ export function App() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [hintDismissed, setHintDismissed] = useState(() => localStorage.getItem('cn:hintLongpress') === '1')
+  // PWA-Installation: beforeinstallprompt merken und einen Button anbieten.
+  const [installPrompt, setInstallPrompt] = useState<{ prompt: () => void } | null>(null)
 
   // Wohnwagen laden, sobald ein Store existiert.
   useEffect(() => {
@@ -41,6 +43,22 @@ export function App() {
       active = false
     }
   }, [store])
+
+  // "App installieren"-Angebot des Browsers abfangen.
+  useEffect(() => {
+    function onPrompt(e: Event) {
+      e.preventDefault()
+      setInstallPrompt(e as unknown as { prompt: () => void })
+    }
+    window.addEventListener('beforeinstallprompt', onPrompt)
+    window.addEventListener('appinstalled', () => setInstallPrompt(null))
+    return () => window.removeEventListener('beforeinstallprompt', onPrompt)
+  }, [])
+
+  function install() {
+    installPrompt?.prompt()
+    setInstallPrompt(null)
+  }
 
   function enter(b: string, c: string) {
     localStorage.setItem('cn:board', b)
@@ -132,6 +150,11 @@ export function App() {
         <button onClick={editAuthor} title="Name setzen">
           👤 {author || 'Name'}
         </button>
+        {installPrompt && (
+          <button className="primary" onClick={install} title="Als App installieren">
+            ⬇︎ Installieren
+          </button>
+        )}
         <button onClick={leave} title="Platz wechseln">Abmelden</button>
       </div>
 

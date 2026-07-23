@@ -9,3 +9,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <App />
   </React.StrictMode>,
 )
+
+// Service Worker registrieren (macht die App installierbar / offline-fähig).
+if ('serviceWorker' in navigator) {
+  const base = import.meta.env.BASE_URL
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register(`${base}sw.js`, { scope: base }).catch(() => {
+      /* ignorieren – App funktioniert auch ohne SW */
+    })
+  })
+}

@@ -9,6 +9,8 @@ Geteilte Notizen zu Wohnwagen auf einem Campingplatz – auf einer Karte.
 - Pro Wohnwagen **Personen** erfassen (Name, Jahrgang, Kommentar).
 - **Geteilt** über einen gemeinsamen Zugangscode – alle mit demselben Code
   sehen und bearbeiten dieselben Notizen.
+- **Installierbar als PWA** (Manifest + Service Worker): «Installieren»-Button
+  bzw. «Zum Startbildschirm hinzufügen».
 
 Aktuell fest auf **Camping Ruderbaum, Altnau (TG)** konfiguriert
 (siehe `src/config.ts`). Die Karte startet direkt dort, standardmässig im Luftbild.
