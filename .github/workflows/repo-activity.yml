@@ -1,0 +1,50 @@
+name: Repo-Aktivität (haelt Cron-Workflows aktiv)
+
+# Warum das existiert:
+# GitHub deaktiviert geplante (cron) Workflows automatisch, wenn im Repository
+# 60 Tage lang keine Aktivität stattfand. Der Supabase-Keepalive würde damit
+# still einschlafen. Dieser Workflow macht deshalb monatlich einen winzigen
+# Commit -> das zaehlt als Aktivitaet und setzt die 60-Tage-Uhr zurueck.
+#
+# Er haelt damit auch sich selbst am Leben (laeuft ~alle 30 Tage, also weit
+# innerhalb der 60-Tage-Grenze) und braucht niemanden, der manuell pusht.
+#
+# Hinweis: Pushes mit dem GITHUB_TOKEN loesen absichtlich KEINE weiteren
+# Workflows aus - es entsteht also keine Endlosschleife mit dem Deploy.
+
+on:
+  schedule:
+    # Am 1. jedes Monats, 05:23 UTC
+    - cron: '23 5 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  touch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Zeitstempel schreiben und pushen
+        run: |
+          set -euo pipefail
+
+          mkdir -p .github
+          date -u +'%Y-%m-%dT%H:%M:%SZ' > .github/last-activity
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          git add .github/last-activity
+          if git diff --cached --quiet; then
+            echo "Keine Aenderung - nichts zu tun."
+            exit 0
+          fi
+
+          git commit -m "chore: Repo-Aktivitaet (haelt geplante Workflows aktiv)"
+          git push origin HEAD:${{ github.ref_name }}
+          echo "Gepusht - 60-Tage-Uhr fuer Cron-Workflows zurueckgesetzt."
