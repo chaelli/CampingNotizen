@@ -1,0 +1,54 @@
+name: Supabase Keepalive
+
+# Hält das Supabase-Projekt aktiv: Bei der Gratis-Stufe wird ein Projekt nach
+# einigen Tagen ohne Zugriff pausiert. Ein leichter täglicher Request genügt.
+#
+# Hinweis: Geplante (cron) Workflows laufen bei GitHub nur vom DEFAULT-Branch
+# und werden nach 60 Tagen ohne Repo-Aktivität automatisch deaktiviert
+# (GitHub schickt dann eine E-Mail zum Reaktivieren).
+
+on:
+  schedule:
+    # Täglich 04:17 UTC (nicht auf die Stunde genau -> weniger Staus bei GitHub)
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Supabase anpingen
+        run: |
+          set -euo pipefail
+
+          # URL + öffentlicher anon-Key aus der App-Konfiguration lesen,
+          # damit es nur eine Quelle der Wahrheit gibt.
+          URL=$(node -e "const s=require('fs').readFileSync('src/supabaseConfig.ts','utf8');process.stdout.write(s.match(/url:\s*'([^']+)'/)[1])")
+          KEY=$(node -e "const s=require('fs').readFileSync('src/supabaseConfig.ts','utf8');process.stdout.write(s.match(/anonKey:\s*'([^']+)'/)[1])")
+
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "::error::Supabase-URL oder anon-Key konnte nicht aus src/supabaseConfig.ts gelesen werden."
+            exit 1
+          fi
+
+          echo "Ping $URL (Tabelle caravans, 1 Zeile)"
+          CODE=$(curl -sS -o /tmp/out.json -w '%{http_code}' \
+            -H "apikey: $KEY" \
+            -H "Authorization: Bearer $KEY" \
+            -H "Accept: application/json" \
+            "$URL/rest/v1/caravans?select=id&limit=1")
+
+          echo "HTTP $CODE"
+          head -c 300 /tmp/out.json || true
+          echo
+
+          if [ "$CODE" != "200" ]; then
+            echo "::error::Keepalive-Request fehlgeschlagen (HTTP $CODE)."
+            exit 1
+          fi
+          echo "Supabase ist erreichbar – Projekt bleibt aktiv."
